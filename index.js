@@ -6,10 +6,31 @@ garden.style.background = '#000000';
 
 c.imageSmoothingEnabled = false;
 
-var numNodes = 700;
+var numNodes = 300;
 var minDist = 50;
 var screenWidth = window.innerWidth;
 var screenHeight = window.innerHeight;
+
+devicePixelRatio = window.devicePixelRatio || 1,
+backingStoreRatio = c.webkitBackingStorePixelRatio ||
+                    c.mozBackingStorePixelRatio ||
+                    c.msBackingStorePixelRatio ||
+                    c.oBackingStorePixelRatio ||
+                    c.backingStorePixelRatio || 1,
+
+ratio = devicePixelRatio / backingStoreRatio;
+if (devicePixelRatio !== backingStoreRatio) {
+    var oldWidth = garden.width;
+    var oldHeight = garden.height;
+
+    garden.width = oldWidth * ratio;
+    garden.height = oldHeight * ratio;
+
+    garden.style.width = oldWidth + 'px';
+    garden.style.height = oldHeight + 'px';
+
+    c.scale(ratio, ratio);
+}
 
 var nodes = [];
 
@@ -18,8 +39,8 @@ function initNodes() {
 		var node = {
 			x: Math.random() * (screenWidth + 2 * minDist),
 			y: Math.random() * (screenHeight + 2 * minDist),
-			vx: Math.random() * .5+ .2,
-			vy: Math.random() * .5 + .2,
+			vx: Math.random() * .2+ .2,
+			vy: Math.random() * .2 + .2,
 			size: 1,
 			opacity: "rgba(256, 256, 256, 1)"
 		};
@@ -56,7 +77,8 @@ function draw(nArray) {
 				c.beginPath();
 				c.moveTo(nArray[i].x, nArray[i].y);
 				c.lineTo(nArray[j].x, nArray[j].y);
-				c.strokeStyle = "rgba(256, 256, 256, " + ((minDist - dist)/minDist) + ")";
+				c.lineWidth = .5;
+				c.strokeStyle = "rgba(256, 256, 256, " + ((minDist - dist)/minDist)  + ")";
 				c.stroke();
 			}
 		}
@@ -67,12 +89,11 @@ function calcDist(node1, node2) {
 }
 
 function drawupdate() {
-	setTimeout(function(){
 		c.clearRect(0, 0, screenWidth, screenHeight);
 		draw(nodes);
 		update(nodes);
 		requestAnimationFrame(drawupdate);
-	}, 1000/120);
+
 }
 window.addEventListener('resize', resizeCanvas, false);
 window.addEventListener('click', addNode);
@@ -80,6 +101,18 @@ window.addEventListener('click', addNode);
 function resizeCanvas() {
 	garden.width = window.innerWidth;
 	garden.height = window.innerHeight;
+	if (devicePixelRatio !== backingStoreRatio) {
+	    var oldWidth = garden.width;
+	    var oldHeight = garden.height;
+
+	    garden.width = oldWidth * ratio;
+	    garden.height = oldHeight * ratio;
+
+	    garden.style.width = oldWidth + 'px';
+	    garden.style.height = oldHeight + 'px';
+
+	    c.scale(ratio, ratio);
+	}
 }
 
 function addNode() {
@@ -97,5 +130,6 @@ function addNode() {
 	c.fill();
 	nodes.push(node);
 }
+
 initNodes();
 requestAnimationFrame(drawupdate);
