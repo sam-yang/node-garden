@@ -2,14 +2,16 @@ var garden = document.getElementById("garden");
 garden.width = window.innerWidth;
 garden.height = window.innerHeight;
 var c = garden.getContext("2d");
-garden.style.background = '#000000';
+garden.style.background = '#000022';
 
 c.imageSmoothingEnabled = false;
 
-var numNodes = 300;
-var minDist = 50;
 var screenWidth = window.innerWidth;
 var screenHeight = window.innerHeight;
+
+var numNodes = 500;
+var minLinkDist = screenWidth/28;
+
 
 devicePixelRatio = window.devicePixelRatio || 1,
 backingStoreRatio = c.webkitBackingStorePixelRatio ||
@@ -37,8 +39,8 @@ var nodes = [];
 function initNodes() {
 	for (var i = 0; i < numNodes; i++) {
 		var node = {
-			x: Math.random() * (screenWidth + 2 * minDist),
-			y: Math.random() * (screenHeight + 2 * minDist),
+			x: Math.random() * (screenWidth + 2 * minLinkDist),
+			y: Math.random() * (screenHeight + 2 * minLinkDist),
 			vx: Math.random() * .2+ .2,
 			vy: Math.random() * .2 + .2,
 			size: 1,
@@ -52,14 +54,14 @@ function update(nArray) {
 	for (var i = 0; i < nArray.length; i++) {
 		nArray[i].x += nArray[i].vx;
 		nArray[i].y += nArray[i].vy;
-		if (nArray[i].x > (screenWidth + minDist) || nArray[i].y > (screenHeight + minDist)) {
+		if (nArray[i].x > (screenWidth + minLinkDist) || nArray[i].y > (screenHeight + minLinkDist)) {
 			if (Math.random() < screenWidth/(screenHeight + screenWidth)) {
 				nArray[i].x = Math.random() * screenWidth;
-				nArray[i].y = -minDist;
+				nArray[i].y = -minLinkDist;
 			}
 			else {
 				nArray[i].y = Math.random() * screenHeight;
-				nArray[i].x = -minDist;
+				nArray[i].x = -minLinkDist;
 			}
 		}
 	}
@@ -73,12 +75,12 @@ function draw(nArray) {
 		c.fill();
 		for (var j = 0; j < nArray.length; j++) {
 			var dist = calcDist(nArray[i], nArray[j]);
-			if (dist < minDist) {
+			if (dist < minLinkDist) {
 				c.beginPath();
 				c.moveTo(nArray[i].x, nArray[i].y);
 				c.lineTo(nArray[j].x, nArray[j].y);
 				c.lineWidth = .5;
-				c.strokeStyle = "rgba(256, 256, 256, " + ((minDist - dist)/minDist)  + ")";
+				c.strokeStyle = "rgba(256, 256, 256, " + ((minLinkDist - dist)/minLinkDist)  + ")";
 				c.stroke();
 			}
 		}
@@ -89,7 +91,7 @@ function calcDist(node1, node2) {
 }
 
 function drawupdate() {
-		c.clearRect(0, 0, screenWidth, screenHeight);
+		c.clearRect(-minLinkDist, -minLinkDist, screenWidth + minLinkDist, screenHeight + minLinkDist);
 		draw(nodes);
 		update(nodes);
 		requestAnimationFrame(drawupdate);
@@ -128,6 +130,17 @@ function addNode() {
 	c.arc(node.x, node.y, node.size, 0, Math.PI*2, true);
 	c.fillStyle = node.opacity;
 	c.fill();
+	for (var i = 0; i < nodes.length; i++) {
+			var dist = calcDist(nodes[i], node);
+			if (dist < minLinkDist) {
+				c.beginPath();
+				c.moveTo(nodes[i].x, nodes[i].y);
+				c.lineTo(node.x, node.y);
+				c.lineWidth = .5;
+				c.strokeStyle = "rgba(256, 256, 256, " + ((minLinkDist - dist)/minLinkDist)  + ")";
+				c.stroke();
+			}
+		}
 	nodes.push(node);
 }
 
