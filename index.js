@@ -9,8 +9,8 @@ c.imageSmoothingEnabled = false;
 var screenWidth = window.innerWidth;
 var screenHeight = window.innerHeight;
 
-var numNodes = 500;
-var minLinkDist = screenWidth/28;
+var numNodes = screenWidth/4;
+var minLinkDist = screenWidth/26;
 
 
 devicePixelRatio = window.devicePixelRatio || 1,
@@ -39,8 +39,8 @@ var nodes = [];
 function initNodes() {
 	for (var i = 0; i < numNodes; i++) {
 		var node = {
-			x: Math.random() * (screenWidth + 2 * minLinkDist),
-			y: Math.random() * (screenHeight + 2 * minLinkDist),
+			x: Math.floor(Math.random() * (screenWidth + 2 * minLinkDist)),
+			y: Math.floor(Math.random() * (screenHeight + 2 * minLinkDist)),
 			vx: Math.random() * .2+ .2,
 			vy: Math.random() * .2 + .2,
 			size: 1,
@@ -79,8 +79,8 @@ function draw(nArray) {
 				c.beginPath();
 				c.moveTo(nArray[i].x, nArray[i].y);
 				c.lineTo(nArray[j].x, nArray[j].y);
-				c.lineWidth = .5;
-				c.strokeStyle = "rgba(256, 256, 256, " + ((minLinkDist - dist)/minLinkDist)  + ")";
+				c.lineWidth = ((minLinkDist - dist)/minLinkDist) * .5;
+				c.strokeStyle = "rgba(256, 256, 256, 1)";
 				c.stroke();
 			}
 		}
