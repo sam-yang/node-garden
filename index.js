@@ -9,9 +9,9 @@ c.imageSmoothingEnabled = false;
 var screenWidth = window.innerWidth;
 var screenHeight = window.innerHeight;
 
-var numNodes = screenWidth/4;
-var minLinkDist = screenWidth/26;
-var minGravDist = screenWidth/15;
+var numNodes = screenWidth/10;
+var minLinkDist = screenWidth/16;
+var minGravDist = screenWidth/16;
 
 
 devicePixelRatio = window.devicePixelRatio || 1,
@@ -44,6 +44,8 @@ function initNodes() {
 			y: Math.floor(Math.random() * (screenHeight + 2 * minLinkDist)),
 			vx: Math.random() * .8 - .4,
 			vy: Math.random() * .8 - .4,
+			ax: 0,
+			ay: 0,
 			size: 1,
 			opacity: "rgba(256, 256, 256, 1)"
 		};
@@ -53,27 +55,47 @@ function initNodes() {
 
 function update(nArray) {
 	for (var i = 0; i < nArray.length; i++) {
-		nArray[i].x += nArray[i].vx + calcForceX(nArray[i], nArray);
-		nArray[i].y += nArray[i].vy + calcForceY(nArray[i], nArray);
+		nArray[i].ax = calcForceX(nArray[i], nArray);
+		nArray[i].ay = calcForceY(nArray[i], nArray);
+		nArray[i].vx += nArray[i].ax;
+		nArray[i].vy += nArray[i].ay;
+		nArray[i].x += nArray[i].vx;
+		nArray[i].y += nArray[i].vy;
 		if (nArray[i].x < -minLinkDist || nArray[i].y < -minLinkDist || nArray[i].x > (screenWidth + minLinkDist) || nArray[i].y > (screenHeight + minLinkDist)) {
 			if (Math.random() < .5) {
 				if (Math.random() < screenWidth/(screenHeight + screenWidth)) {
 					nArray[i].x = Math.random() * screenWidth;
 					nArray[i].y = -minLinkDist;
+					nArray[i].vx = Math.random() * .8 - .4;
+					nArray[i].vy = Math.random() * .8 - .4;
+					nArray[i].ax = 0;
+					nArray[i].ay = 0;
 				}
 				else {
 					nArray[i].y = Math.random() * screenHeight;
 					nArray[i].x = -minLinkDist;
+					nArray[i].vx = Math.random() * .8 - .4;
+					nArray[i].vy = Math.random() * .8 - .4;
+					nArray[i].ax = 0;
+					nArray[i].ay = 0;
 				}
 			}
 			else {
 				if (Math.random() < screenWidth/(screenHeight + screenWidth)) {
 					nArray[i].x = Math.random() * screenWidth;
 					nArray[i].y = screenHeight + minLinkDist;
+					nArray[i].vx = Math.random() * .8 - .4;
+					nArray[i].vy = Math.random() * .8 - .4;
+					nArray[i].ax = 0;
+					nArray[i].ay = 0;
 				}
 				else {
 					nArray[i].y = Math.random() * screenHeight;
 					nArray[i].x = screenWidth + minLinkDist;
+					nArray[i].vx = Math.random() * .8 - .4;
+					nArray[i].vy = Math.random() * .8 - .4;
+					nArray[i].ax = 0;
+					nArray[i].ay = 0;
 				}
 			}
 		}
@@ -163,7 +185,7 @@ function calcForceX(node, nArray) {
 		if (node !== nArray[i]) {
 			var dist = calcDist(node, nArray[i]);
 			if (dist < minGravDist){
-				var force = (10 * node.size * nArray[i].size) / (dist * dist);
+				var force = (3 * node.size * nArray[i].size) / (dist * dist);
 				forceX += (force * (nArray[i].x - node.x) / dist);		
 			}
 		}
@@ -176,7 +198,7 @@ function calcForceY(node, nArray) {
 		if (node !== nArray[i]) {
 			var dist = calcDist(node, nArray[i]);
 			if (dist < minGravDist){
-				var force = (10 * node.size * nArray[i].size) / (dist * dist);
+				var force = (3 * node.size * nArray[i].size) / (dist * dist);
 				forceY += (force * (nArray[i].y - node.y) / dist);			
 			}
 		}
