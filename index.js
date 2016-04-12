@@ -2,7 +2,6 @@ var garden = document.getElementById("garden");
 garden.width = window.innerWidth;
 garden.height = window.innerHeight;
 var c = garden.getContext("2d");
-garden.style.background = '#000022';
 
 c.imageSmoothingEnabled = false;
 
@@ -10,8 +9,8 @@ var screenWidth = window.innerWidth;
 var screenHeight = window.innerHeight;
 
 var numNodes = screenWidth/10;
-var minLinkDist = screenWidth/16;
-var minGravDist = screenWidth/16;
+var minLinkDist = screenWidth/23;
+var minGravDist = screenWidth;
 
 
 devicePixelRatio = window.devicePixelRatio || 1,
@@ -42,11 +41,11 @@ function initNodes() {
 		var node = {
 			x: Math.floor(Math.random() * (screenWidth + 2 * minLinkDist)),
 			y: Math.floor(Math.random() * (screenHeight + 2 * minLinkDist)),
-			vx: Math.random() * .8 - .4,
-			vy: Math.random() * .8 - .4,
+			vx: Math.random() * .2 - .1,
+			vy: Math.random() * .2 - .1,
 			ax: 0,
 			ay: 0,
-			size: 1,
+			size: Math.random() * .6 + .4,
 			opacity: "rgba(256, 256, 256, 1)"
 		};
 		nodes.push(node);
@@ -55,6 +54,24 @@ function initNodes() {
 
 function update(nArray) {
 	for (var i = 0; i < nArray.length; i++) {
+		for (var j = 0; j < nArray.length; j++) {
+			if (nArray[j] !== nArray[i]) {
+				dist = calcDist(nArray[i], nArray[j]);
+				if (dist < .5) {
+					nArray[j].vx = (nArray[j].vx + nArray[i].vx)/2;
+					nArray[j].vy = (nArray[j].vy + nArray[i].vy)/2;
+					nArray[j].ax = 0;
+					nArray[j].ay = 0;
+					if (nArray[j].size + nArray[i].size < 1.5) {
+						nArray[j].size += .2 * nArray[i].size;
+					}
+					else {
+						nArray[j].size = 1.5;
+					}
+					resetNode(nArray[i]);
+				}
+			}
+		}
 		nArray[i].ax = calcForceX(nArray[i], nArray);
 		nArray[i].ay = calcForceY(nArray[i], nArray);
 		nArray[i].vx += nArray[i].ax;
@@ -62,42 +79,7 @@ function update(nArray) {
 		nArray[i].x += nArray[i].vx;
 		nArray[i].y += nArray[i].vy;
 		if (nArray[i].x < -minLinkDist || nArray[i].y < -minLinkDist || nArray[i].x > (screenWidth + minLinkDist) || nArray[i].y > (screenHeight + minLinkDist)) {
-			if (Math.random() < .5) {
-				if (Math.random() < screenWidth/(screenHeight + screenWidth)) {
-					nArray[i].x = Math.random() * screenWidth;
-					nArray[i].y = -minLinkDist;
-					nArray[i].vx = Math.random() * .8 - .4;
-					nArray[i].vy = Math.random() * .8 - .4;
-					nArray[i].ax = 0;
-					nArray[i].ay = 0;
-				}
-				else {
-					nArray[i].y = Math.random() * screenHeight;
-					nArray[i].x = -minLinkDist;
-					nArray[i].vx = Math.random() * .8 - .4;
-					nArray[i].vy = Math.random() * .8 - .4;
-					nArray[i].ax = 0;
-					nArray[i].ay = 0;
-				}
-			}
-			else {
-				if (Math.random() < screenWidth/(screenHeight + screenWidth)) {
-					nArray[i].x = Math.random() * screenWidth;
-					nArray[i].y = screenHeight + minLinkDist;
-					nArray[i].vx = Math.random() * .8 - .4;
-					nArray[i].vy = Math.random() * .8 - .4;
-					nArray[i].ax = 0;
-					nArray[i].ay = 0;
-				}
-				else {
-					nArray[i].y = Math.random() * screenHeight;
-					nArray[i].x = screenWidth + minLinkDist;
-					nArray[i].vx = Math.random() * .8 - .4;
-					nArray[i].vy = Math.random() * .8 - .4;
-					nArray[i].ax = 0;
-					nArray[i].ay = 0;
-				}
-			}
+			resetNode(nArray[i]);
 		}
 	}
 }
@@ -114,7 +96,7 @@ function draw(nArray) {
 				c.beginPath();
 				c.moveTo(nArray[i].x, nArray[i].y);
 				c.lineTo(nArray[j].x, nArray[j].y);
-				c.lineWidth = ((minLinkDist - dist)/minLinkDist) * .5;
+				c.lineWidth = ((minLinkDist - dist)/minLinkDist) * .3;
 				c.strokeStyle = "rgba(256, 256, 256, 1)";
 				c.stroke();
 			}
@@ -156,26 +138,11 @@ function addNode() {
 	var node = {
 		x: event.clientX,
 		y: event.clientY,
-		vx: Math.random() * .5+ .2,
-		vy: Math.random() * .5 + .2,
-		size: 1,
+		vx: Math.random() * .2 - .1,
+		vy: Math.random() * .2 - .1,
+		size: Math.random() * .8 + .2,
 		opacity: "rgba(256, 256, 256, 1)"
 	}
-	c.beginPath();
-	c.arc(node.x, node.y, node.size, 0, Math.PI*2, true);
-	c.fillStyle = node.opacity;
-	c.fill();
-	for (var i = 0; i < nodes.length; i++) {
-			var dist = calcDist(nodes[i], node);
-			if (dist < minLinkDist) {
-				c.beginPath();
-				c.moveTo(nodes[i].x, nodes[i].y);
-				c.lineTo(node.x, node.y);
-				c.lineWidth = .5;
-				c.strokeStyle = "rgba(256, 256, 256, " + ((minLinkDist - dist)/minLinkDist)  + ")";
-				c.stroke();
-			}
-		}
 	nodes.push(node);
 }
 
@@ -185,7 +152,7 @@ function calcForceX(node, nArray) {
 		if (node !== nArray[i]) {
 			var dist = calcDist(node, nArray[i]);
 			if (dist < minGravDist){
-				var force = (3 * node.size * nArray[i].size) / (dist * dist);
+				var force = (.2 * node.size * nArray[i].size) / (dist * dist);
 				forceX += (force * (nArray[i].x - node.x) / dist);		
 			}
 		}
@@ -198,12 +165,54 @@ function calcForceY(node, nArray) {
 		if (node !== nArray[i]) {
 			var dist = calcDist(node, nArray[i]);
 			if (dist < minGravDist){
-				var force = (3 * node.size * nArray[i].size) / (dist * dist);
+				var force = (.2 * node.size * nArray[i].size) / (dist * dist);
 				forceY += (force * (nArray[i].y - node.y) / dist);			
 			}
 		}
 	}
 	return forceY;
+}
+function resetNode(node) {
+	if (Math.random() < .5) {
+		if (Math.random() < screenWidth/(screenHeight + screenWidth)) {
+			node.x = Math.random() * screenWidth;
+			node.y = -minLinkDist;
+			node.vx = Math.random() * .2 - .1;
+			node.vy = Math.random() * .1;
+			node.ax = 0;
+			node.ay = 0;
+			node.size = Math.random() * .6 + .4;
+		}
+		else {
+			node.y = Math.random() * screenHeight;
+			node.x = -minLinkDist;
+			node.vx = Math.random() * .1;
+			node.vy = Math.random() * .2 - .1;
+			node.ax = 0;
+			node.ay = 0;
+			node.size = Math.random() * .6 + .4;
+		}
+	}
+	else {
+		if (Math.random() < screenWidth/(screenHeight + screenWidth)) {
+			node.x = Math.random() * screenWidth;
+			node.y = screenHeight + minLinkDist;
+			node.vx = Math.random() * .2 - .1;
+			node.vy = Math.random() * -.1;
+			node.ax = 0;
+			node.ay = 0;
+			node.size = Math.random() * .6+ .4;
+		}
+		else {
+			node.y = Math.random() * screenHeight;
+			node.x = screenWidth + minLinkDist;
+			node.vx = Math.random() * -.1;
+			node.vy = Math.random() * .2 - .1;
+			node.ax = 0;
+			node.ay = 0;
+			node.size = Math.random() * .6 + .4;
+		}
+	}
 }
 
 initNodes();
