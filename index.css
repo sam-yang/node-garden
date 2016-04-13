@@ -2,3 +2,7 @@
 	display: block;
 	background: #000000;
 }
+.slider {
+	display: inline-block;
+	position: relative;
+}

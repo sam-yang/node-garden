@@ -9,9 +9,40 @@ var screenWidth = window.innerWidth;
 var screenHeight = window.innerHeight;
 
 var numNodes = screenWidth/10;
-var minLinkDist = screenWidth/23;
-var minGravDist = screenWidth;
+var minLinkDist = screenWidth/20;
+var minGravDist = 100;
+var gravLevel = .2;
 
+var nodeSlider = document.getElementById("nodes-slider");
+nodeSlider.max = numNodes * 2;
+nodeSlider.value = numNodes;
+nodeSlider.oninput = function() {
+	if (this.value > nodes.length) {
+		while (this.value > nodes.length) {
+			var node = {};
+			resetNode(node);
+			node.x = Math.random() * screenWidth;
+			node.y = Math.random() * screenHeight;
+			nodes.push(node);
+		}
+	}
+	else {
+		while (this.value < nodes.length) {
+			nodes.pop();
+		}
+	}
+}
+var linkSlider = document.getElementById("link-slider");
+linkSlider.max = minLinkDist * 2;
+linkSlider.value = minLinkDist;
+linkSlider.oninput = function() {
+	minLinkDist = this.value;
+}
+var gravSlider = document.getElementById("grav-slider");
+gravSlider.value = gravLevel;
+gravSlider.oninput = function() {
+	gravLevel = this.value;
+}
 
 devicePixelRatio = window.devicePixelRatio || 1,
 backingStoreRatio = c.webkitBackingStorePixelRatio ||
@@ -57,7 +88,7 @@ function update(nArray) {
 		for (var j = 0; j < nArray.length; j++) {
 			if (nArray[j] !== nArray[i]) {
 				dist = calcDist(nArray[i], nArray[j]);
-				if (dist < .5) {
+				if (dist < .8) {
 					nArray[j].vx = (nArray[j].vx + nArray[i].vx)/2;
 					nArray[j].vy = (nArray[j].vy + nArray[i].vy)/2;
 					nArray[j].ax = 0;
@@ -74,8 +105,8 @@ function update(nArray) {
 		}
 		nArray[i].ax = calcForceX(nArray[i], nArray);
 		nArray[i].ay = calcForceY(nArray[i], nArray);
-		nArray[i].vx += nArray[i].ax;
-		nArray[i].vy += nArray[i].ay;
+		nArray[i].vx = 1 * (nArray[i].vx + nArray[i].ax);
+		nArray[i].vy = 1 * (nArray[i].vy + nArray[i].ay);
 		nArray[i].x += nArray[i].vx;
 		nArray[i].y += nArray[i].vy;
 		if (nArray[i].x < -minLinkDist || nArray[i].y < -minLinkDist || nArray[i].x > (screenWidth + minLinkDist) || nArray[i].y > (screenHeight + minLinkDist)) {
@@ -96,7 +127,7 @@ function draw(nArray) {
 				c.beginPath();
 				c.moveTo(nArray[i].x, nArray[i].y);
 				c.lineTo(nArray[j].x, nArray[j].y);
-				c.lineWidth = ((minLinkDist - dist)/minLinkDist) * .3;
+				c.lineWidth = ((minLinkDist - dist)/minLinkDist) * .2;
 				c.strokeStyle = "rgba(256, 256, 256, 1)";
 				c.stroke();
 			}
@@ -115,7 +146,7 @@ function drawupdate() {
 
 }
 window.addEventListener('resize', resizeCanvas, false);
-window.addEventListener('click', addNode);
+garden.addEventListener('click', clickNode);
 
 function resizeCanvas() {
 	garden.width = window.innerWidth;
@@ -134,7 +165,7 @@ function resizeCanvas() {
 	}
 }
 
-function addNode() {
+function clickNode() {
 	var node = {
 		x: event.clientX,
 		y: event.clientY,
@@ -152,7 +183,7 @@ function calcForceX(node, nArray) {
 		if (node !== nArray[i]) {
 			var dist = calcDist(node, nArray[i]);
 			if (dist < minGravDist){
-				var force = (.2 * node.size * nArray[i].size) / (dist * dist);
+				var force = (gravLevel * node.size * nArray[i].size) / (dist * dist);
 				forceX += (force * (nArray[i].x - node.x) / dist);		
 			}
 		}
@@ -165,7 +196,7 @@ function calcForceY(node, nArray) {
 		if (node !== nArray[i]) {
 			var dist = calcDist(node, nArray[i]);
 			if (dist < minGravDist){
-				var force = (.2 * node.size * nArray[i].size) / (dist * dist);
+				var force = (gravLevel * node.size * nArray[i].size) / (dist * dist);
 				forceY += (force * (nArray[i].y - node.y) / dist);			
 			}
 		}
