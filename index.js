@@ -3,46 +3,45 @@ garden.width = window.innerWidth;
 garden.height = window.innerHeight;
 var c = garden.getContext("2d");
 
-c.imageSmoothingEnabled = false;
-
 var screenWidth = window.innerWidth;
 var screenHeight = window.innerHeight;
 
-var numNodes = screenWidth/10;
+var numNodes = screenWidth/8;
 var minLinkDist = screenWidth/20;
-var minGravDist = 100;
+var minGravDist = 1000;
 var gravLevel = .2;
+var minMerge = 1;
 
-var nodeSlider = document.getElementById("nodes-slider");
-nodeSlider.max = numNodes * 2;
-nodeSlider.value = numNodes;
-nodeSlider.oninput = function() {
-	if (this.value > nodes.length) {
-		while (this.value > nodes.length) {
-			var node = {};
-			resetNode(node);
-			node.x = Math.random() * screenWidth;
-			node.y = Math.random() * screenHeight;
-			nodes.push(node);
-		}
-	}
-	else {
-		while (this.value < nodes.length) {
-			nodes.pop();
-		}
-	}
-}
-var linkSlider = document.getElementById("link-slider");
-linkSlider.max = minLinkDist * 2;
-linkSlider.value = minLinkDist;
-linkSlider.oninput = function() {
-	minLinkDist = this.value;
-}
-var gravSlider = document.getElementById("grav-slider");
-gravSlider.value = gravLevel;
-gravSlider.oninput = function() {
-	gravLevel = this.value;
-}
+// var nodeSlider = document.getElementById("nodes-slider");
+// nodeSlider.max = numNodes * 2;
+// nodeSlider.value = numNodes;
+// nodeSlider.oninput = function() {
+// 	if (this.value > nodes.length) {
+// 		while (this.value > nodes.length) {
+// 			var node = {};
+// 			resetNode(node);
+// 			node.x = Math.random() * screenWidth;
+// 			node.y = Math.random() * screenHeight;
+// 			nodes.push(node);
+// 		}
+// 	}
+// 	else {
+// 		while (this.value < nodes.length) {
+// 			nodes.pop();
+// 		}
+// 	}
+// }
+// var linkSlider = document.getElementById("link-slider");
+// linkSlider.max = minLinkDist * 2;
+// linkSlider.value = minLinkDist;
+// linkSlider.oninput = function() {
+// 	minLinkDist = this.value;
+// }
+// var gravSlider = document.getElementById("grav-slider");
+// gravSlider.value = gravLevel;
+// gravSlider.oninput = function() {
+// 	gravLevel = this.value;
+// }
 
 devicePixelRatio = window.devicePixelRatio || 1,
 backingStoreRatio = c.webkitBackingStorePixelRatio ||
@@ -87,8 +86,8 @@ function update(nArray) {
 	for (var i = 0; i < nArray.length; i++) {
 		for (var j = 0; j < nArray.length; j++) {
 			if (nArray[j] !== nArray[i]) {
-				dist = calcDist(nArray[i], nArray[j]);
-				if (dist < .8) {
+				dist = calcDistSq(nArray[i], nArray[j]);
+				if (dist < minMerge * minMerge) {
 					nArray[j].vx = (nArray[j].vx + nArray[i].vx)/2;
 					nArray[j].vy = (nArray[j].vy + nArray[i].vy)/2;
 					nArray[j].ax = 0;
@@ -122,21 +121,25 @@ function draw(nArray) {
 		c.fillStyle = nArray[i].opacity;
 		c.fill();
 		for (var j = 0; j < nArray.length; j++) {
-			var dist = calcDist(nArray[i], nArray[j]);
-			if (dist < minLinkDist) {
+			var dist = calcDistSq(nArray[i], nArray[j]);
+			if (dist < minLinkDist * minLinkDist) {
 				c.beginPath();
 				c.moveTo(nArray[i].x, nArray[i].y);
 				c.lineTo(nArray[j].x, nArray[j].y);
-				c.lineWidth = ((minLinkDist - dist)/minLinkDist) * .2;
+				c.lineWidth = ((minLinkDist - Math.sqrt(dist))/minLinkDist) * .2;
 				c.strokeStyle = "rgba(256, 256, 256, 1)";
 				c.stroke();
 			}
 		}
 	}
 }
-function calcDist(node1, node2) {
-	return Math.sqrt((node1.x - node2.x)*(node1.x - node2.x) + (node1.y - node2.y)*(node1.y - node2.y));
+// function calcDist(node1, node2) {
+// 	return Math.sqrt((node1.x - node2.x)*(node1.x - node2.x) + (node1.y - node2.y)*(node1.y - node2.y));
+// }
+function calcDistSq(node1, node2) {
+	return ((node1.x - node2.x)*(node1.x - node2.x) + (node1.y - node2.y)*(node1.y - node2.y));
 }
+
 
 function drawupdate() {
 		c.clearRect(-minLinkDist, -minLinkDist, screenWidth + minLinkDist, screenHeight + minLinkDist);
@@ -181,10 +184,10 @@ function calcForceX(node, nArray) {
 	var forceX = 0;
 	for (var i = 0; i < nArray.length; i++) {
 		if (node !== nArray[i]) {
-			var dist = calcDist(node, nArray[i]);
-			if (dist < minGravDist){
-				var force = (gravLevel * node.size * nArray[i].size) / (dist * dist);
-				forceX += (force * (nArray[i].x - node.x) / dist);		
+			var dist = calcDistSq(node, nArray[i]);
+			if (dist < minGravDist * minGravDist){
+				var force = (gravLevel * node.size * nArray[i].size) / (dist);
+				forceX += (force * (nArray[i].x - node.x) / Math.sqrt(dist));		
 			}
 		}
 	}
@@ -194,10 +197,10 @@ function calcForceY(node, nArray) {
 	var forceY = 0;
 	for (var i = 0; i < nArray.length; i++) {
 		if (node !== nArray[i]) {
-			var dist = calcDist(node, nArray[i]);
-			if (dist < minGravDist){
-				var force = (gravLevel * node.size * nArray[i].size) / (dist * dist);
-				forceY += (force * (nArray[i].y - node.y) / dist);			
+			var dist = calcDistSq(node, nArray[i]);
+			if (dist < minGravDist * minGravDist){
+				var force = (gravLevel * node.size * nArray[i].size) / (dist);
+				forceY += (force * (nArray[i].y - node.y) / Math.sqrt(dist));			
 			}
 		}
 	}
